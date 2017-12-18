@@ -111,7 +111,21 @@ var model = {
 			}
 			return month;
 	},
-	recountAccount: function(){
+	getFormat: function(){ /*Перевод даты в необходимый формат YYYY-MM-DD*/
+		var res = {
+			date : Number(this.getDate()) < 10 ? "0" + this.getDate() : this.getDate(),
+			month: Number(this.getMonth()+1) < 10 ? "0" + Number(this.getMonth()+1) : this.getMonth()+1,
+			year : Number(this.getFullYear())
+		};
+
+		return res.year + "-" + res.month + "-" + res.date;
+	},
+	validateFormData:function(data){
+		console.log("Form validation");
+		console.log(data);
+		return false;
+	},
+	recountAccount: function(){/*Пересчёт процентов на банковском счёте*/
 		var accounts = model.getFromStorage("account");
 		for(var i = 0;i < accounts.length;i++){
 			var tmpAcc = accounts[i];
@@ -125,7 +139,7 @@ var model = {
 			localStorage.setItem("account["+ i +"]",JSON.stringify(tmpAcc));
 		}
 	},
-	updatePocket: function(pocket,obj){
+	updatePocket: function(pocket,obj){ /*Увеличение и уменьшение средств в кошельке*/
 		if(obj.type == "cost"){	
 			pocket["cash_"+obj.currency] = Number(pocket["cash_"+obj.currency]) - Number(obj.summ); 	
 		}else if(obj.type == "income"){
@@ -133,7 +147,7 @@ var model = {
 		}
 		return pocket;
 	},
-	updateGraph: function(graph,obj){//grapf == array
+	updateGraph: function(graph,obj){//grapf == array /*Обновление данных граффика*/
 		var currDate = Number(new Date().getDate());
 		console.log("Udating graph");
 		console.log(obj.date);
@@ -154,7 +168,7 @@ var model = {
 		fillChart(graph);
 		return graph;
 	},
-	createUserPocket: function(){
+	createUserPocket: function(){ /*Создание кошелька пользователя*/
 		if(!localStorage.getItem("pocket[0]")){
 			var pocket = new model.UserPocket(1500,0,500,0,1000,0,0,0),
 				pocketJSON = JSON.stringify(pocket);
@@ -162,11 +176,11 @@ var model = {
 			localStorage.setItem("pocketNum",1);
 		}
 	},
-	createChart: function(){
-		var chartData = model.getFromStorage("graph");
+	createChart: function(){ /*Созддание таблицы (с взятием данных из localStorage)*/
+		var chartData = model.getFromStorage("graph"),
+			dateNow = new Date().getDate();
 		if(chartData.length == 0){
-			var dateNow = new Date().getDate(),
-				pocket = model.getFromStorage("pocket"),
+			var pocket = model.getFromStorage("pocket"),
 				graphData = [];
 			for(var i = 0;i<Number(dateNow);i++){
 				graphData[i] = 0;
@@ -174,13 +188,15 @@ var model = {
 					graphData[i+1] = pocket[0].cash_BLR;
 				}
 			}
-
 			fillChart(graphData);
 			model.saveToStorage(graphData,"graph");
 		}else{
+			if(chartData[0].length - 1 < dateNow){
+				for(var i = chartData[0].length;i<=dateNow;i++){
+					chartData[0][i] = chartData[0][i-1]
+				}
+			}
 			fillChart(chartData[0]);
-			//console.log("arr not empty");
-			//console.log(chartData[0]);
 		}
 
 	},
@@ -191,8 +207,8 @@ var model = {
 		for(var i = 0; i < inputs.length; i++){
 			ress_arr[i] = inputs[i].value;
 		}
-		if(inputs.length == 4){
-			ress_obj = new model.Transaction(ress_arr[0],ress_arr[1],ress_arr[2],ress_arr[3]);
+		if(inputs.length == 3){
+			ress_obj = new model.Transaction(model.getFormat.call(new Date()),ress_arr[0],ress_arr[1],ress_arr[2]);
 		}else{
 			ress_obj = new model.Account(ress_arr[0],ress_arr[1],ress_arr[2],ress_arr[3],ress_arr[4]);	
 		}
@@ -216,7 +232,7 @@ var model = {
 			localStorage.setItem("graph[0]",JSON.stringify(model.updateGraph(graph,obj)));
 		}
 	},
-	getFromStorage:function(type){
+	getFromStorage:function(type){ /*чтение из localStorage*/
 		var typeNum = localStorage.getItem(type + "Num"),
 			tmpStr = type,
 			objField = "",
@@ -239,7 +255,6 @@ var model = {
 /*-----------------Begining of the 'controller' class---------------*/
 
 var controller = {
-	/*Добавление расхода*/
 	initControler:function(){
 		model.initModel();
 		view.showTable(model.getFromStorage("cost"),model.getFromStorage("income"),model.getFromStorage("account"));
@@ -247,15 +262,22 @@ var controller = {
 	},
 	saveCost: function(){
 		var data = model.getFormFields($("#add-cost-form"));
-		model.saveToStorage(data, "cost");
+		
+		if(model.validateFormData(data)){
+			$("#add-cost-modal").modal('hide');
+			//model.saveToStorage(data, "cost");
+		}
+		
 	},
 	saveIncome: function(){
 		var data = model.getFormFields($("#add-income-form"));
-		model.saveToStorage(data, "income");	
+		$("#add-income-modal").modal('hide');
+		//model.saveToStorage(data, "income");	
 	},
 	saveAccount: function(){
 		var data = model.getFormFields($("#add-account-form"));
-		model.saveToStorage(data, "account");	
+		$("#add-account-modal").modal('hide');
+		//model.saveToStorage(data, "account");	
 	}
 
 
