@@ -1,0 +1,28 @@
+.cont-marg-top{
+	margin-top: 10px;
+}
+
+div.form-group label.text-left{
+	text-align: left;
+}
+
+textarea {
+	resize: none;
+}
+
+#div-costs,#div-income,#div-account{
+	height: 200px;
+}
+
+#add-cost,#add-income,#add-account{
+	margin-top: 25px;
+	float:right;
+}
+#show-graph{
+	margin-top: 25px;
+}
+
+
+.pocket{
+	display: none;
+}

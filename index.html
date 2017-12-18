@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<meta charset="utf-8">
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+	<link rel="stylesheet" type="text/css" href="css/fonts.css">
+
+	<link rel="stylesheet" type="text/css" href="lib/bootstrap/bootstrap.min.css">
+
+	
+	<script src="lib/jquery/jquery-1.12.0.min.js"></script>
+	<script src="lib/jquery/jquery-ui.min.js"></script>
+	<script src="lib/bootstrap/bootstrap.min.js"></script>
+	<script type="text/javascript" src="lib/chart/Chart.min.js"></script>
+</head>
+<body>
+	<div class="container cont-marg-top">
+		<div class="row">
+			<div class="col-md-2"></div>
+			<div class="col-md-8">
+				<ul class="nav nav-tabs" role="tablist">
+					<li role="presentation" class="active"><a href="#tab-costs" aria-controls="tab-costs" role="tab" data-toggle="tab">Расходы</a></li>
+					<li role="presentation"><a href="#tab-income" aria-controls="tab-income" role="tab" data-toggle="tab">Доходы</a></li>
+					<li role="presentation"><a href="#tab-account" aria-controls="tab-account" role="tab" data-toggle="tab">Банковский счёт</a></li>
+				</ul>
+				<!-- Modal windows -->
+				<!-- add-cost-modal begin -->
+				<div class="modal fade" tabindex="-1" role="dialog" id="add-cost-modal" aria-labelledby="myLargeModalLabel">
+					<div class="modal-dialog" role="document">
+						<div class="modal-content">
+							<div class="modal-header">
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+								<h4 class="modal-title">Добавить статью расходов</h4>
+							</div>
+							<div class="modal-body">
+								<p>Заполните форму</p>
+								<form class="form-horizontal" id="add-cost-form">
+									<div class="form-group">
+										<label for="cost-date" class="text-left col-sm-4 control-label">Дата</label>
+										<div class="col-sm-8">
+											<input type="date" id="cost-date" class="form-control" placeholder="дд.мм.гггг">
+										</div>
+									</div>
+									<div class="form-group">
+										<label for="cost-summ" class="text-left col-sm-4 control-label">Сумма расхода</label>
+										<div class="col-sm-8">
+											<input type="text" id="cost-summ" class="form-control" placeholder="Укажите сумму">
+										</div>
+									</div>
+									<div class="form-group">
+										<label for="cost-currency" class="text-left col-sm-4 control-label">Валюта</label>
+										<div class="col-sm-8">
+											<select class="form-control" id="cost-currency">
+												<option>BLR</option>
+												<option>RUS</option>
+												<option>DOL</option>
+												<option>EUR</option>
+											</select>
+										</div>
+									</div>
+									<div class="form-group">
+										<label for="cost-reason" class="text-left col-sm-4 control-label">Причина</label>
+										<div class="col-sm-8">
+											<textarea id="cost-reason" class="form-control" rows="3"></textarea> 
+										</div>
+									</div>
+								</form>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+								<button type="button" id="save-cost" class="btn btn-primary">Сохранить</button>
+							</div>
+						</div><!-- /.modal-content -->
+					</div>
+				</div>
+				<!-- add-cost-modal end -->
+
+				<!-- add-income-modal begin -->
+				<div class="modal fade" tabindex="-1"  role="dialog" id="add-income-modal" aria-labelledby="myLargeModalLabel">
+					<div class="modal-dialog" role="document">
+						<div class="modal-content">
+							<div class="modal-header">
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+								<h4 class="modal-title">Добавить статью доходов</h4>
+							</div>
+							<div class="modal-body">
+								<p>Заполните форму</p>
+								<form class="form-horizontal" id="add-income-form">
+									<div class="form-group">
+										<label for="income-date" class="text-left col-sm-4 control-label">Дата</label>
+										<div class="col-sm-8">
+											<input type="date" id="income-date"	 class="form-control" placeholder="дд.мм.гггг">
+										</div>
+									</div>
+									<div class="form-group">
+										<label for="income-summ" class="text-left col-sm-4 control-label">Сумма нового поступления</label>
+										<div class="col-sm-8">
+											<input type="text" id="income-summ" class="form-control" placeholder="Укажите сумму">
+										</div>
+									</div>
+									<div class="form-group">
+										<label for="account-currency" class="text-left col-sm-4 control-label">Валюта</label>
+										<div class="col-sm-8">
+											<select class="form-control" id="account-currency">
+												<option>BLR</option>
+												<option>RUS</option>
+												<option>DOL</option>
+												<option>EUR</option>
+											</select>
+										</div>
+									</div>
+									<div class="form-group">
+										<label for="income-reason" class="text-left col-sm-4 control-label">Источник дохода</label>
+										<div class="col-sm-8">
+											<textarea id="income-reason" class="form-control" rows="3"></textarea> 
+										</div>
+									</div>
+								</form>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+								<button type="button" id="save-income" class="btn btn-primary">Сохранить</button>
+							</div>
+						</div><!-- /.modal-content -->
+					</div>
+				</div>
+				<!-- add-income-modal end -->
+
+				<!-- add-account-modal begin -->
+				<div class="modal fade" tabindex="-1" role="dialog" id="add-account-modal" aria-labelledby="myLargeModalLabel">
+					<div class="modal-dialog" role="document">
+						<div class="modal-content">
+							<div class="modal-header">
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+								<h4 class="modal-title">Добавить информацию о счёте в банке</h4>
+							</div>
+							<div class="modal-body">
+								<p>Заполните форму</p>
+
+								<form class="form-horizontal" id="add-account-form">
+									<div class="form-group">
+										<label for="account-date" class="text-left col-sm-4 control-label">Дата</label>
+										<div class="col-sm-8">
+											<input type="date" id="account-date" class="form-control" placeholder="дд.мм.гггг">
+										</div>
+									</div>
+									<div class="form-group">
+										<label for="account-summ" class="text-left col-sm-4 control-label">Размер вклада</label>
+										<div class="col-sm-8">
+											<input type="text" id="account-summ" class="form-control" placeholder="Укажите сумму">
+										</div>
+									</div>
+									<div class="form-group">
+										<label for="account-currency" class="text-left col-sm-4 control-label">Валюта</label>
+										<div class="col-sm-8">
+											<select class="form-control" id="account-currency">
+												<option>BLR</option>
+												<option>RUS</option>
+												<option>DOL</option>
+												<option>EUR</option>
+											</select>
+										</div>
+									</div>
+									<div class="form-group">
+										<label for="account-name" class="text-left col-sm-4 control-label">Название вклада</label>
+										<div class="col-sm-8">
+											<input type="text" id="account-name" class="form-control" placeholder="Название">
+										</div>
+									</div>
+									<div class="form-group">
+										<label for="account-rate" class="text-left col-sm-4 control-label">Процентная ставка</label>
+										<div class="col-sm-8">
+											<input type="text" id="account-rate" class="form-control" placeholder="Процентная ставка">
+										</div>
+									</div>
+								</form>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+								<button type="button" id="save-account" class="btn btn-primary">Сохранить</button>
+							</div>
+						</div><!-- /.modal-content -->
+					</div>
+				</div>
+				<!-- add-account-modal end -->
+
+				<!-- Start modal graphics -->
+				<div class="modal fade bs-example-modal-lg" id="graphics-modal" tabindex="-1" role="dialog">
+					<div class="modal-dialog modal-lg" role="document">
+						<div class="modal-content">
+							<div class="modal-header">
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+								<h4 class="modal-title">Граффик учёта наличных денежных средств</h4>
+							</div>
+							<div class="modal-body">
+								<div id="curve_chart" style="width: 850px; height: 440px">
+									<canvas id="myChart"></canvas>
+								</div>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+							</div>
+						</div><!-- /.modal-content -->
+					</div><!-- /.modal-dialog -->
+				</div><!-- /.modal -->
+
+				<!-- End modal graphics -->
+
+				<!-- End modal windows -->
+
+				<!-- Tab panes -->
+				<div class="tab-content">
+					<!-- Tab costs -->	
+					<div role="tabpanel" class="tab-pane active" id="tab-costs">
+						<h4>Таблица расходов</h4>
+						<div class="table-responsive"  id="div-costs">
+							<table class="table table-bordered" id="table-cost">
+								<thead>
+									<tr>
+										<th>Дата</th>
+										<th>Сумма расхода</th>
+										<th>Валюта</th>
+										<th>Причина</th>
+									</tr>
+								</thead>
+							</table>
+						</div>
+						<div class="row">
+							<div class="col-md-8"></div>
+							<div class="col-md-4">
+							<button type="button" id="show-graph" data-toggle="modal" class="btn btn-default btn-sm" data-target="#graphics-modal">Посмотреть граффик</button>
+								<button type="button" id="add-cost" data-toggle="modal" class="btn btn-primary btn-sm" data-target="#add-cost-modal">Добавить</button>
+							</div>
+						</div>
+					</div>
+					<!-- End tab costs-->
+					<!-- Tab income -->
+					<div role="tabpanel" class="tab-pane" id="tab-income">
+						<h4>Таблица доходов</h4>
+						<div class="table-responsive"  id="div-income">
+							<table class="table table-bordered" id="table-income">
+								<thead>
+									<tr>
+										<th>Дата</th>
+										<th>Сумма дохода</th>
+										<th>Валюта</th>
+										<th>Источник</th>
+									</tr>
+								</thead>
+							</table>
+						</div>
+						<div class="row">
+							<div class="col-md-10"></div>
+							<div class="col-md-2">
+								<button type="button" id="add-income" data-toggle="modal" data-target="#add-income-modal" class="btn btn-primary btn-sm btn-block">Добавить</button>
+							</div>
+						</div>
+					</div>
+					<!-- End tab income -->
+					<!-- Tab bank account-->
+					<div role="tabpanel" class="tab-pane" id="tab-account">
+						<h4>Информация о банковском счёте</h4>
+						<div class="table-responsive"  id="div-account">
+							<table class="table table-bordered" id="table-account">
+								<thead>
+									<tr>
+										<th>Дата открытия</th>
+										<th>Размер вклада</th>
+										<th>Валюта</th>
+										<th>Название вклада</th>
+										<th>Процентная ставка</th>
+										<th>Пересчёт с процентами</th>
+									</tr>
+								</thead>
+							</table>
+						</div>
+						<div class="row">
+							<div class="col-md-10"></div>
+							<div class="col-md-2">
+								<button type="button" id="add-account" data-toggle="modal" data-target="#add-account-modal" class="btn btn-primary btn-sm btn-block">Добавить</button>
+							</div>
+						</div>
+					</div>
+					<!-- End tab bank account-->
+				</div>
+				<div class="row">
+					<div class="col-md-12" id="cash_row">
+						<hr>
+						<p>Наличные денежные средства</p>
+						<div class="row">
+							<div class="col-md-2 pocket">
+								<p><b>BLR:<span id="cash_BLR"></span></b></p>
+							</div>
+							<div class="col-md-2 pocket">
+								<p><b>RUS:<span id="cash_RUS"></span></b></p>
+							</div>
+							<div class="col-md-2 pocket">
+								<p><b>DOL:<span id="cash_DOL"></span></b></p>
+							</div>
+							<div class="col-md-2 pocket">
+								<p><b>EUR:<span id="cash_EUR"></span></b></p>
+							</div>
+						</div>
+						<p>Денежные средства на пластиковой карте</p>
+						<div class="row">
+							<div class="col-md-4 pocket">
+								<p><b>BLR:<span id="card_BLR"></span></b></p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-2"></div>
+
+		</div>	
+
+
+
+	</div>
+	<script type="text/javascript" src="js/chart.js"></script>
+	<script src="js/app.js"></script>
+</body>
+</html>

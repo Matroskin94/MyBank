@@ -1,0 +1,16 @@
+{
+    "manifest_version": 2,
+ 
+    "name": "My Bank",
+    "description": "This extension will fix your costs and incomes",
+    "version": "1.0",
+ 
+    "browser_action": {
+        "default_icon": "images/app_icon.png",
+        "default_popup": "popup.html"
+    },
+
+    "permissions": [
+        "activeTab"
+    ]
+}
