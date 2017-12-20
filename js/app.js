@@ -41,6 +41,22 @@ var view = {
 				$("#"+key).text(pocket[0][key]);
 			}
 		}
+	},
+	showErrMessage: function(errObj,butt){
+		var res_str = "",
+			err_p = $(butt).parent().find("p");
+		if(errObj.emptyFields){
+			res_str = res_str + "Не все поля заполнены<br>";
+		}
+		if(errObj.wrongDataType){
+			res_str = res_str + "Неверно указана сумма";
+		}
+		err_p.html(res_str);
+		$(err_p[0]).fadeIn();
+	},
+	hideErrMessage: function(butt){
+		var err_p = $(butt).parent().find("p");
+		err_p.fadeOut();
 	}	
 
 };
@@ -111,19 +127,25 @@ var model = {
 			}
 			return month;
 	},
-	getFormat: function(){ /*Перевод даты в необходимый формат YYYY-MM-DD*/
-		var res = {
-			date : Number(this.getDate()) < 10 ? "0" + this.getDate() : this.getDate(),
-			month: Number(this.getMonth()+1) < 10 ? "0" + Number(this.getMonth()+1) : this.getMonth()+1,
-			year : Number(this.getFullYear())
-		};
-
-		return res.year + "-" + res.month + "-" + res.date;
-	},
 	validateFormData:function(data){
 		console.log("Form validation");
-		console.log(data);
-		return false;
+		var res = {
+			result: true,
+			emptyFields:false,
+			wrongDataType:false
+		};
+		for(key in data){
+			if((data[key] == "" || data[key] == undefined) && key != "type"){
+				res.result = false;
+				res.emptyFields = true;
+			}
+			if((!isNumeric(data[key]))&&(data[key] != "") && key == "summ"){
+				res.result = false;
+				res.wrongDataType = true;
+			}
+		}
+		console.log(res);
+		return res;
 	},
 	recountAccount: function(){/*Пересчёт процентов на банковском счёте*/
 		var accounts = model.getFromStorage("account");
@@ -178,10 +200,10 @@ var model = {
 	},
 	createChart: function(){ /*Созддание таблицы (с взятием данных из localStorage)*/
 		var chartData = model.getFromStorage("graph"),
+			pocket = model.getFromStorage("pocket");
 			dateNow = new Date().getDate();
 		if(chartData.length == 0){
-			var pocket = model.getFromStorage("pocket"),
-				graphData = [];
+			var graphData = [];
 			for(var i = 0;i<Number(dateNow);i++){
 				graphData[i] = 0;
 				if(i == Number(dateNow)-1){
@@ -190,6 +212,15 @@ var model = {
 			}
 			fillChart(graphData);
 			model.saveToStorage(graphData,"graph");
+		}else if(chartData[0].length >= dateNow){
+			chartData[0] = [];
+			for(var i = 0;i<=dateNow;i++){
+				chartData[0][i] = pocket[0].cash_BLR;
+			}
+			fillChart(chartData[0]);
+			delete localStorage["graphNum"];
+			delete localStorage["graph[0]"];
+			model.saveToStorage(chartData[0],"graph");
 		}else{
 			if(chartData[0].length - 1 < dateNow){
 				for(var i = chartData[0].length;i<=dateNow;i++){
@@ -208,7 +239,7 @@ var model = {
 			ress_arr[i] = inputs[i].value;
 		}
 		if(inputs.length == 3){
-			ress_obj = new model.Transaction(model.getFormat.call(new Date()),ress_arr[0],ress_arr[1],ress_arr[2]);
+			ress_obj = new model.Transaction(getFormat.call(new Date()),ress_arr[0],ress_arr[1],ress_arr[2]);
 		}else{
 			ress_obj = new model.Account(ress_arr[0],ress_arr[1],ress_arr[2],ress_arr[3],ress_arr[4]);	
 		}
@@ -261,12 +292,13 @@ var controller = {
 		view.showPocket(model.getFromStorage("pocket"));
 	},
 	saveCost: function(){
-		var data = model.getFormFields($("#add-cost-form"));
-		
-		if(model.validateFormData(data)){
+		var data = model.getFormFields($("#add-cost-form")),
+			validation = model.validateFormData(data);
+		if(validation.result){
 			$("#add-cost-modal").modal('hide');
+			view.hideErrMessage("#save-cost");
 			//model.saveToStorage(data, "cost");
-		}
+		}else view.showErrMessage(validation,"#save-cost");
 		
 	},
 	saveIncome: function(){
