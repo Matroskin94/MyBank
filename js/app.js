@@ -51,8 +51,13 @@ var view = {
 		if(errObj.wrongDataType){
 			res_str = res_str + "Неверно указана сумма";
 		}
-		err_p.html(res_str);
-		$(err_p[0]).fadeIn();
+		
+		$(err_p[0]).fadeOut(100,function(){
+			err_p.html(res_str);
+			$(err_p[0]).fadeIn();
+		});
+		
+		
 	},
 	hideErrMessage: function(butt){
 		var err_p = $(butt).parent().find("p");
@@ -99,34 +104,6 @@ var model = {
 		model.createUserPocket();
 		model.createChart();
 	},
-	calcDate: function(date){//Date format 2017-12-15 YYYY-MM-DD Считает разницу в месяцах
-		var needDate = date.split("-"),
-			currDate = new Date(),
-			dateNow = {
-				day: currDate.getDate(),
-				month: currDate.getMonth()+1,
-				year: currDate.getFullYear()
-			},
-			needDate = {
-				day: +date.split("-")[2],
-				month: +date.split("-")[1],
-				year: +date.split("-")[0]
-			},
-			month = 0;
-			if((dateNow.year > needDate.year)&&(dateNow.month >= needDate.month)&&(dateNow.day >= needDate.day)){
-				month = (dateNow.year - needDate.year) * 12;
-				month = month + (dateNow.month - needDate.month);
-			}else if((dateNow.year > needDate.year)&&(dateNow.month < needDate.month)){
-				month = (dateNow.year - needDate.year - 1) * 12;
-				month = month + dateNow.month + (12 - needDate.month);
-			}else if((dateNow.year == needDate.year) && (dateNow.month > needDate.month)){
-				month = month + (dateNow.month-1 - needDate.month);
-			}
-			if((needDate.day < dateNow.day)&&(needDate.month != dateNow.month)){
-				month++;
-			}
-			return month;
-	},
 	validateFormData:function(data){
 		console.log("Form validation");
 		var res = {
@@ -147,11 +124,35 @@ var model = {
 		console.log(res);
 		return res;
 	},
+	getFormFields: function(form){ //Чтение полей формы
+		var inputs = $(form).find("input, textarea, select"),
+			ress_arr = [],
+			ress_obj = {};
+		for(var i = 0; i < inputs.length; i++){
+			ress_arr[i] = inputs[i].value;
+		}
+		if(inputs.length == 3){
+			ress_obj = new model.Transaction(getFormat.call(new Date()),ress_arr[0],ress_arr[1],ress_arr[2]);
+		}else{
+			ress_obj = new model.Account(ress_arr[0],ress_arr[1],ress_arr[2],ress_arr[3],ress_arr[4]);	
+		}
+		return ress_obj;
+	},
+	clearFormData:function(butt){ // Очистка полей формы
+		var formId = "#add-" + $(butt).parent().parent().find("form")[0].id.split("-")[1] + "-form",
+			inputs = $(formId).find("input, textarea,select");
+		for(var i = 0;i<inputs.length;i++){
+			if(inputs[i].type == "select-one"){
+				inputs[i].selectedIndex  = 0;
+			}else inputs[i].value = "";
+		}
+
+	},
 	recountAccount: function(){/*Пересчёт процентов на банковском счёте*/
 		var accounts = model.getFromStorage("account");
 		for(var i = 0;i < accounts.length;i++){
 			var tmpAcc = accounts[i];
-				monthPassed = model.calcDate(tmpAcc.date),
+				monthPassed = calcDate(tmpAcc.date),
 				currSumm = +accounts[i].summ,
 				currPercent = +accounts[i].percent;
 			for(var j = 0;j<monthPassed;j++){
@@ -231,20 +232,6 @@ var model = {
 		}
 
 	},
-	getFormFields: function(form){ //Чтение полей формы
-		var inputs = $(form).find("input, textarea, select"),
-			ress_arr = [],
-			ress_obj = {};
-		for(var i = 0; i < inputs.length; i++){
-			ress_arr[i] = inputs[i].value;
-		}
-		if(inputs.length == 3){
-			ress_obj = new model.Transaction(getFormat.call(new Date()),ress_arr[0],ress_arr[1],ress_arr[2]);
-		}else{
-			ress_obj = new model.Account(ress_arr[0],ress_arr[1],ress_arr[2],ress_arr[3],ress_arr[4]);	
-		}
-		return ress_obj;
-	},
 	saveToStorage: function(obj,type){ // Сохранение в localStorage
 		var typeNum = 0;
 		if(localStorage.getItem(type + "Num") != null){
@@ -291,25 +278,21 @@ var controller = {
 		view.showTable(model.getFromStorage("cost"),model.getFromStorage("income"),model.getFromStorage("account"));
 		view.showPocket(model.getFromStorage("pocket"));
 	},
-	saveCost: function(){
-		var data = model.getFormFields($("#add-cost-form")),
+	saveForm: function(){
+		var formType = this.id.split("-")[1],
+			data = model.getFormFields($("#add-"+ formType +"-form")),
 			validation = model.validateFormData(data);
 		if(validation.result){
-			$("#add-cost-modal").modal('hide');
-			view.hideErrMessage("#save-cost");
-			//model.saveToStorage(data, "cost");
-		}else view.showErrMessage(validation,"#save-cost");
+			$("#add-"+formType+"-modal").modal('hide');
+			view.hideErrMessage("#save-"+formType);
+			//model.saveToStorage(data, formType);
+			model.clearFormData(this);
+		}else view.showErrMessage(validation,"#save-"+formType);
 		
 	},
-	saveIncome: function(){
-		var data = model.getFormFields($("#add-income-form"));
-		$("#add-income-modal").modal('hide');
-		//model.saveToStorage(data, "income");	
-	},
-	saveAccount: function(){
-		var data = model.getFormFields($("#add-account-form"));
-		$("#add-account-modal").modal('hide');
-		//model.saveToStorage(data, "account");	
+	closeForm: function(){
+		view.hideErrMessage(this);
+		model.clearFormData(this);
 	}
 
 
@@ -332,10 +315,17 @@ $(document).ready(function() {
 		ivent: function(){
 			var add_cost_but = document.getElementById("save-cost"),
 				add_income_but = document.getElementById("save-income"),
-				add_account_but = document.getElementById("save-account");
-			add_cost_but.onclick = controller.saveCost;
-			add_income_but.onclick = controller.saveIncome;
-			add_account_but.onclick = controller.saveAccount;
+				add_account_but = document.getElementById("save-account"),
+				close_form_butts = document.getElementsByClassName("close-form"),
+				close_modal = document.getElementsByClassName("modal");
+			add_cost_but.onclick = controller.saveForm;
+			add_income_but.onclick = controller.saveForm;
+			add_account_but.onclick = controller.saveForm;
+			for(var i = 0;i<close_form_butts.length; i++){
+				close_form_butts.item(i).onclick = controller.closeForm;
+			}
+			$(close_modal).on('hide.bs.modal',controller.closeForm);
+			
 		}		
 	};
 	app.init();
