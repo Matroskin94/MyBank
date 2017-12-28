@@ -11,7 +11,7 @@ function getFormat(){ /*Перевод даты в необходимый фор
 	return res.year + "-" + res.month + "-" + res.date;
 }
 
-function calcData(){ //Date format 2017-12-15 YYYY-MM-DD Считает разницу в месяцах
+function calcDate(date){ //Date format 2017-12-15 YYYY-MM-DD Считает разницу в месяцах
 	var needDate = date.split("-"),
 		currDate = new Date(),
 		dateNow = {

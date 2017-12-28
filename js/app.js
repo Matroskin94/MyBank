@@ -45,12 +45,9 @@ var view = {
 	showErrMessage: function(errObj,butt){
 		var res_str = "",
 			err_p = $(butt).parent().find("p");
-		if(errObj.emptyFields){
-			res_str = res_str + "Не все поля заполнены<br>";
-		}
-		if(errObj.wrongDataType){
-			res_str = res_str + "Неверно указана сумма";
-		}
+		if(errObj.emptyFields) res_str = res_str + "Не все поля заполнены<br>";
+		if(errObj.wrongSumm) res_str = res_str + "Неверно указана сумма<br>";
+		if(errObj.wrongPercent) res_str = res_str + "Неверно указана процентная ставка"
 		
 		$(err_p[0]).fadeOut(100,function(){
 			err_p.html(res_str);
@@ -60,7 +57,7 @@ var view = {
 		
 	},
 	hideErrMessage: function(butt){
-		var err_p = $(butt).parent().find("p");
+		var err_p = $(butt).find("p");
 		err_p.fadeOut();
 	}	
 
@@ -80,12 +77,12 @@ var model = {
 	},
 	Account: function(date,summ,currency,name,percent,type){
 		this.date = date;
-		this.summ = summ;
+		this.summ = summ; // Сумма первоначального вклада
 		this.currency = currency;
 		this.name = name;
 		this.percent = percent;
 		this.type = type;
-		this.currSumm = summ;
+		this.currSumm = summ; //Сумма в пересчёте с процентами
 
 	},
 	UserPocket: function(blr,rus,dol,eur,blr_card,rus_card,dol_card,eur_card){
@@ -109,16 +106,20 @@ var model = {
 		var res = {
 			result: true,
 			emptyFields:false,
-			wrongDataType:false
+			wrongSumm:false,
+			wrongPercent:false
 		};
 		for(key in data){
+			//console.log("key:" + key);
+			//console.log("data:" + data[key]);
 			if((data[key] == "" || data[key] == undefined) && key != "type"){
 				res.result = false;
 				res.emptyFields = true;
 			}
-			if((!isNumeric(data[key]))&&(data[key] != "") && key == "summ"){
+			if((!isNumeric(data[key]))&&(data[key] != "") && ((key == "summ")||(key == "percent"))){
 				res.result = false;
-				res.wrongDataType = true;
+				if(key == "summ") res.wrongSumm = true;
+				if(key == "percent") res.wrongPercent = true;
 			}
 		}
 		console.log(res);
@@ -156,7 +157,7 @@ var model = {
 				currSumm = +accounts[i].summ,
 				currPercent = +accounts[i].percent;
 			for(var j = 0;j<monthPassed;j++){
-				currSumm = currSumm + (currSumm * (currPercent/100));
+				currSumm = currSumm + (currSumm * (currPercent/100/12));
 			}
 			tmpAcc.currSumm = Math.round(currSumm * 100) / 100;
 			localStorage.setItem("account["+ i +"]",JSON.stringify(tmpAcc));
@@ -316,14 +317,10 @@ $(document).ready(function() {
 			var add_cost_but = document.getElementById("save-cost"),
 				add_income_but = document.getElementById("save-income"),
 				add_account_but = document.getElementById("save-account"),
-				close_form_butts = document.getElementsByClassName("close-form"),
 				close_modal = document.getElementsByClassName("modal");
 			add_cost_but.onclick = controller.saveForm;
 			add_income_but.onclick = controller.saveForm;
 			add_account_but.onclick = controller.saveForm;
-			for(var i = 0;i<close_form_butts.length; i++){
-				close_form_butts.item(i).onclick = controller.closeForm;
-			}
 			$(close_modal).on('hide.bs.modal',controller.closeForm);
 			
 		}		
@@ -331,10 +328,3 @@ $(document).ready(function() {
 	app.init();
 	
 });
-
-
-/*var main = function(){
-   console.log("js is ready");
-}
-
-$(document).ready(main);*/
