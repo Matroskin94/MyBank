@@ -27,9 +27,9 @@ var chart = new Chart(ctx, {
     type: 'line',
     // The data for our dataset
     data: {
-        labels: fillDates(30),
+        labels: fillDates(daysInMonth()),
         datasets: [{
-            label: "December costs",
+            label: (new Date()).getMonthName(),
             borderColor: 'rgb(255, 99, 132)',
             data: [],
         }]

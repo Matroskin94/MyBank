@@ -19,19 +19,32 @@ var view = {
 				arr_type = simpleArr[0].type;
 				view.clearTable("table-"+arr_type);
 				for(var j = 0;j < simpleArr.length; j++){
-					var currRow = document.createElement("tr");
-					for(key in simpleArr[j]){
-						if(key != "type"){
-							var currCell = document.createElement("td");
-							currCell.innerHTML = simpleArr[j][key];
-						}
-						$(currRow).append(currCell);
-					}
-					$("#table-"+arr_type).append(currRow);
+					view.addTableRow(simpleArr[j],arr_type);
 				}
 				$("#table-"+arr_type).fadeIn("slow");
 			}
 		}
+	},
+	addTableRow: function(row,type){
+		var currRow = document.createElement("tr");
+		for(key in row){
+			if(key != "type"){
+				var currCell = document.createElement("td");
+				currCell.innerHTML = row[key];
+			}
+			$(currRow).append(currCell);
+		}
+		$("#table-"+type).append(currRow);
+	},
+	clearFormData:function(butt){ // Очистка полей формы
+		var formId = "#add-" + $(butt).parent().parent().find("form")[0].id.split("-")[1] + "-form",
+			inputs = $(formId).find("input, textarea,select");
+		for(var i = 0;i<inputs.length;i++){
+			if(inputs[i].type == "select-one"){
+				inputs[i].selectedIndex  = 0;
+			}else inputs[i].value = "";
+		}
+
 	},
 	showPocket: function(pocket){
 		var parentDiv = $("#cash_row");
@@ -102,7 +115,6 @@ var model = {
 		model.createChart();
 	},
 	validateFormData:function(data){
-		console.log("Form validation");
 		var res = {
 			result: true,
 			emptyFields:false,
@@ -122,7 +134,6 @@ var model = {
 				if(key == "percent") res.wrongPercent = true;
 			}
 		}
-		console.log(res);
 		return res;
 	},
 	getFormFields: function(form){ //Чтение полей формы
@@ -138,16 +149,6 @@ var model = {
 			ress_obj = new model.Account(ress_arr[0],ress_arr[1],ress_arr[2],ress_arr[3],ress_arr[4]);	
 		}
 		return ress_obj;
-	},
-	clearFormData:function(butt){ // Очистка полей формы
-		var formId = "#add-" + $(butt).parent().parent().find("form")[0].id.split("-")[1] + "-form",
-			inputs = $(formId).find("input, textarea,select");
-		for(var i = 0;i<inputs.length;i++){
-			if(inputs[i].type == "select-one"){
-				inputs[i].selectedIndex  = 0;
-			}else inputs[i].value = "";
-		}
-
 	},
 	recountAccount: function(){/*Пересчёт процентов на банковском счёте*/
 		var accounts = model.getFromStorage("account");
@@ -171,10 +172,10 @@ var model = {
 		}
 		return pocket;
 	},
-	updateGraph: function(graph,obj){//grapf == array /*Обновление данных граффика*/
+	updateGraph: function(graph,obj){//grapf == array obj - расход или дохход/*Обновление данных граффика*/
 		var currDate = Number(new Date().getDate());
-		console.log("Udating graph");
-		console.log(obj.date);
+		//console.log("Udating graph");
+		//console.log(obj.date);
 		for(var i = 0;i<=currDate;i++){
 			if(i == Number(obj.date.split("-")[2])){
 				if(obj.type == "cost"){	
@@ -204,7 +205,9 @@ var model = {
 		var chartData = model.getFromStorage("graph"),
 			pocket = model.getFromStorage("pocket");
 			dateNow = new Date().getDate();
-		if(chartData.length == 0){
+			//console.log("chartData");
+			//console.log(chartData);
+		if(chartData[0].length == 0){
 			var graphData = [];
 			for(var i = 0;i<Number(dateNow);i++){
 				graphData[i] = 0;
@@ -214,7 +217,7 @@ var model = {
 			}
 			fillChart(graphData);
 			model.saveToStorage(graphData,"graph");
-		}else if(chartData[0].length >= dateNow){
+		}else if(chartData[0].length-1 > dateNow){
 			chartData[0] = [];
 			for(var i = 0;i<=dateNow;i++){
 				chartData[0][i] = pocket[0].cash_BLR;
@@ -286,14 +289,15 @@ var controller = {
 		if(validation.result){
 			$("#add-"+formType+"-modal").modal('hide');
 			view.hideErrMessage("#save-"+formType);
+			view.addTableRow(data,formType);
+			view.clearFormData(this);
 			//model.saveToStorage(data, formType);
-			model.clearFormData(this);
 		}else view.showErrMessage(validation,"#save-"+formType);
 		
 	},
 	closeForm: function(){
 		view.hideErrMessage(this);
-		model.clearFormData(this);
+		view.clearFormData(this);
 	}
 
 

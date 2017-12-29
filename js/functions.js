@@ -11,6 +11,18 @@ function getFormat(){ /*Перевод даты в необходимый фор
 	return res.year + "-" + res.month + "-" + res.date;
 }
 
+function daysInMonth(){ // Считает количество дней в текущем месяце
+	var today = new Date();
+	return 33 - new Date(today.getFullYear(), today.getMonth(), 33).getDate();
+}
+
+
+Date.prototype.getMonthName = function() {
+    var month = ['Январь','Февраль','Март','Апрель','Май','Июнь',
+    'Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+    return month[this.getMonth()];
+}
+
 function calcDate(date){ //Date format 2017-12-15 YYYY-MM-DD Считает разницу в месяцах
 	var needDate = date.split("-"),
 		currDate = new Date(),
